@@ -1,9 +1,29 @@
 const vscode = require('vscode');
-
+const { playSound } = require('./playSound');
 const ENABLED_KEY = 'faahsense.enabled'
-
-function startDoingFaahh(){
+/**
+ * @param {vscode.ExtensionContext} context
+ */
+function startListeningForErrors(context){
 	vscode.window.showInformationMessage('FAAAAHhhhhhh.....');
+	const terminalListener = vscode.window.onDidStartTerminalShellExecution(async (event) =>{
+		const execution = event.execution;
+    const stream = execution.read();
+
+    console.log(`Monitoring command: ${execution.commandLine.value}`);
+
+    for await (const data of stream) {
+			// console.log(`Terminal output: ${data}`);
+      if (data.toLowerCase().includes('error') || data.toLowerCase().includes('exception')) {
+
+        vscode.window.showErrorMessage("FAAAAHHH! An error just occurred in the terminal!");
+        playSound();
+
+      }
+    }
+	})
+	context.subscriptions.push(terminalListener);
+
 }
 
 /**
@@ -55,7 +75,7 @@ function activate(context) {
 	registerFaahhCommands(context);
 
 	if (isEnabled) {
-		startDoingFaahh()
+		startListeningForErrors(context)
 	} else {
 		vscode.window.showInformationMessage('Use command "Enable FAAHH" to enable FAAAHHHhhhhh....');
 	};
